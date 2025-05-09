@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Tutorial8.Services;
 
@@ -25,11 +24,12 @@ namespace Tutorial8.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTrip(int id)
         {
-            // if( await DoesTripExist(id)){
-            //  return NotFound();
-            // }
-            // var trip = ... GetTrip(id);
-            return Ok();
+            if (!await _tripsService.DoesTripExist(id))
+            {
+                return NotFound();
+            }
+            var trip = await _tripsService.GetTripDetails(id);
+            return Ok(trip);
         }
     }
 }

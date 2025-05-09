@@ -1,6 +1,80 @@
 @Tutorial8_HostAddress = http://localhost:5128
 
-GET {{Tutorial8_HostAddress}}/weatherforecast/
+### 1.1 GET /api/trips - Success (200 OK)
+GET {{Tutorial8_HostAddress}}/api/trips
 Accept: application/json
 
-###
+### 1.2 GET /api/trips/1 - Success (200 OK)
+GET {{Tutorial8_HostAddress}}/api/trips/1
+Accept: application/json
+
+### 1.3 GET /api/trips/999 - Not Found (404 Not Found)
+GET {{Tutorial8_HostAddress}}/api/trips/999
+Accept: application/json
+
+### 2.1 GET /api/clients/1/trips - Success (200 OK)
+GET {{Tutorial8_HostAddress}}/api/clients/1/trips
+Accept: application/json
+
+### 2.2 GET /api/clients/999/trips - Client Not Found (404 Not Found)
+GET {{Tutorial8_HostAddress}}/api/clients/999/trips
+Accept: application/json
+
+### 3.1 POST /api/clients - Create New Client Success (201 Created)
+POST {{Tutorial8_HostAddress}}/api/clients
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "telephone": "+48123456789",
+  "pesel": "95010112345"
+}
+
+### 3.2 POST /api/clients - Bad Request Missing Required Fields (400 Bad Request)
+POST {{Tutorial8_HostAddress}}/api/clients
+Content-Type: application/json
+
+{
+  "firstName": "",
+  "lastName": "Doe",
+  "email": "john.doe@example.com"
+}
+
+### 4.1 PUT /api/clients/5/trips/3 - Success (200 OK)
+PUT {{Tutorial8_HostAddress}}/api/clients/5/trips/3
+Content-Type: application/json
+
+### 4.2 PUT /api/clients/999/trips/1 - Client Not Found (404 Not Found)
+PUT {{Tutorial8_HostAddress}}/api/clients/999/trips/1
+Content-Type: application/json
+
+### 4.3 PUT /api/clients/1/trips/999 - Trip Not Found (404 Not Found)
+PUT {{Tutorial8_HostAddress}}/api/clients/1/trips/999
+Content-Type: application/json
+
+### 4.4 PUT /api/clients/1/trips/1 - Already Registered (409 Conflict) !run twice!
+PUT {{Tutorial8_HostAddress}}/api/clients/1/trips/1
+Content-Type: application/json
+
+### 5.1 DELETE /api/clients/1/trips/1 - Success (204 No Content)
+DELETE {{Tutorial8_HostAddress}}/api/clients/1/trips/1
+Content-Type: application/json
+
+### 5.2 DELETE /api/clients/5/trips/10 - Registration Not Found (404 Not Found)
+DELETE {{Tutorial8_HostAddress}}/api/clients/5/trips/10
+Content-Type: application/json
+
+### 5.3 DELETE /api/clients/999/trips/1 - Client Not Found (404 Not Found)
+DELETE {{Tutorial8_HostAddress}}/api/clients/999/trips/1
+Content-Type: application/json
+
+### 6.1 PATCH /api/clients/1 - Not Implemented (501 Not Implemented or 404)
+PATCH {{Tutorial8_HostAddress}}/api/clients/1
+Content-Type: application/json
+
+{
+  "email": "updated.email@example.com"
+}
+
