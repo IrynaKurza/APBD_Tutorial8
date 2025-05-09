@@ -125,69 +125,80 @@ public class ClientsService : IClientsService
         using (SqlConnection conn = new SqlConnection(_connectionString))
         {
             await conn.OpenAsync();
-            
-            // check if client exists (used for PUT /api/clients/{id}/trips/{id})
-            string clientCommand = "SELECT 1 FROM Client WHERE IdClient = @cid";
-            
-            using (SqlCommand clientCmd = new SqlCommand(clientCommand, conn))
+            using (SqlTransaction transaction = conn.BeginTransaction())
             {
-                clientCmd.Parameters.AddWithValue("@cid", clientId);
-                if (await clientCmd.ExecuteScalarAsync() == null)
-                    throw new KeyNotFoundException("Client not found");
-            }
-            
-            // check if trip exists and get max number of people
-            string tripCommand = "SELECT MaxPeople FROM Trip WHERE IdTrip = @tid";
-            
-            using (SqlCommand tripCmd = new SqlCommand(tripCommand, conn))
-            {
-                tripCmd.Parameters.AddWithValue("@tid", tripId);
-                var maxPeopleObj = await tripCmd.ExecuteScalarAsync();
-                if (maxPeopleObj == null) 
-                    throw new KeyNotFoundException("Trip not found");
-                
-                var maxPeople = Convert.ToInt32(maxPeopleObj);
-
-                // count current number of registered participants for this trip
-                string currentCommand = "SELECT COUNT(*) FROM Client_Trip WHERE IdTrip = @tid";
-                
-                using (SqlCommand currentCmd = new SqlCommand(currentCommand, conn))
+                try
                 {
-                    currentCmd.Parameters.AddWithValue("@tid", tripId);
-                    var result = await currentCmd.ExecuteScalarAsync();
-                    if (result is null)
-                        throw new InvalidOperationException("Failed to get trip registration count");
-                    var current = Convert.ToInt32(result);
-                    
-                    if (current >= maxPeople) 
-                        throw new InvalidOperationException("Trip is full");
-                }
-            }
-            
-            // check if the client is already registered for this trip
-            string existsCommand = "SELECT 1 FROM Client_Trip WHERE IdClient = @cid AND IdTrip = @tid";
-            
-            using (SqlCommand existsCmd = new SqlCommand(existsCommand, conn))
-            {
-                existsCmd.Parameters.AddWithValue("@cid", clientId);
-                existsCmd.Parameters.AddWithValue("@tid", tripId);
-                if (await existsCmd.ExecuteScalarAsync() != null)
-                    throw new InvalidOperationException("Client already registered");
-            }
-            
-            int todayAsInt = GetTodayAsInt();
-            
-            // insert new registration with today's date
-            string insertCommand = @"
+                    // check if client exists (used for PUT /api/clients/{id}/trips/{id})
+                    string clientCommand = "SELECT 1 FROM Client WHERE IdClient = @cid";
+
+                    using (SqlCommand clientCmd = new SqlCommand(clientCommand, conn, transaction))
+                    {
+                        clientCmd.Parameters.AddWithValue("@cid", clientId);
+                        if (await clientCmd.ExecuteScalarAsync() == null)
+                            throw new KeyNotFoundException("Client not found");
+                    }
+
+                    // check if trip exists and get max number of people
+                    string tripCommand = "SELECT MaxPeople FROM Trip WHERE IdTrip = @tid";
+
+                    using (SqlCommand tripCmd = new SqlCommand(tripCommand, conn, transaction))
+                    {
+                        tripCmd.Parameters.AddWithValue("@tid", tripId);
+                        var maxPeopleObj = await tripCmd.ExecuteScalarAsync();
+                        if (maxPeopleObj == null)
+                            throw new KeyNotFoundException("Trip not found");
+
+                        var maxPeople = Convert.ToInt32(maxPeopleObj);
+
+                        // count current number of registered participants for this trip
+                        string currentCommand = "SELECT COUNT(*) FROM Client_Trip WHERE IdTrip = @tid";
+
+                        using (SqlCommand currentCmd = new SqlCommand(currentCommand, conn, transaction))
+                        {
+                            currentCmd.Parameters.AddWithValue("@tid", tripId);
+                            var result = await currentCmd.ExecuteScalarAsync();
+                            if (result is null)
+                                throw new InvalidOperationException("Failed to get trip registration count");
+                            var current = Convert.ToInt32(result);
+
+                            if (current >= maxPeople)
+                                throw new InvalidOperationException("Trip is full");
+                        }
+                    }
+
+                    // check if the client is already registered for this trip
+                    string existsCommand = "SELECT 1 FROM Client_Trip WHERE IdClient = @cid AND IdTrip = @tid";
+
+                    using (SqlCommand existsCmd = new SqlCommand(existsCommand, conn, transaction))
+                    {
+                        existsCmd.Parameters.AddWithValue("@cid", clientId);
+                        existsCmd.Parameters.AddWithValue("@tid", tripId);
+                        if (await existsCmd.ExecuteScalarAsync() != null)
+                            throw new InvalidOperationException("Client already registered");
+                    }
+
+                    int todayAsInt = GetTodayAsInt();
+
+                    // insert new registration with today's date
+                    string insertCommand = @"
                 INSERT INTO Client_Trip (IdClient, IdTrip, RegisteredAt)
                 VALUES (@cid, @tid, @date)";
-                
-            using (SqlCommand insertCmd = new SqlCommand(insertCommand, conn))
-            {
-                insertCmd.Parameters.AddWithValue("@cid", clientId);
-                insertCmd.Parameters.AddWithValue("@tid", tripId);
-                insertCmd.Parameters.AddWithValue("@date", todayAsInt);
-                await insertCmd.ExecuteNonQueryAsync();
+
+                    using (SqlCommand insertCmd = new SqlCommand(insertCommand, conn, transaction))
+                    {
+                        insertCmd.Parameters.AddWithValue("@cid", clientId);
+                        insertCmd.Parameters.AddWithValue("@tid", tripId);
+                        insertCmd.Parameters.AddWithValue("@date", todayAsInt);
+                        await insertCmd.ExecuteNonQueryAsync();
+                    }
+
+                    transaction.Commit();
+                }catch (Exception)
+                {
+                    transaction.Rollback();
+                    throw;
+                }
             }
         }
     }

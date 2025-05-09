@@ -22,5 +22,6 @@ public class ClientCreateDTO
 
     [Required] 
     [StringLength(11, MinimumLength = 11)]
+    [RegularExpression(@"^\d{11}$", ErrorMessage = "PESEL must be 11 digits")]
     public string Pesel { get; set; }
 }

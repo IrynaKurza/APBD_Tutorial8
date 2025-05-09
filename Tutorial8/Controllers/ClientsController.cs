@@ -22,16 +22,16 @@ namespace Tutorial8.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateClient([FromBody] ClientCreateDTO client)
         {
-            if (!ModelState.IsValid) return BadRequest();
+            if (!ModelState.IsValid) return BadRequest("Invalid client data");
             
             try 
             {
                 int id = await _clientsService.CreateClient(client);
                 return CreatedAtAction(nameof(CreateClient), new { id });
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException)
             {
-                return BadRequest(ex.Message);
+                return BadRequest("Invalid client data");
             }
         }
 
@@ -81,14 +81,19 @@ namespace Tutorial8.Controllers
                 await _clientsService.AssignToTrip(idClient, idTrip);
                 return Ok();
             }
-            catch (KeyNotFoundException)
+            catch (KeyNotFoundException ex)
             {
-                return NotFound();
+                return NotFound(ex.Message);
             }
             catch (InvalidOperationException ex)
             {
                 return Conflict(ex.Message);
             }
+            catch (Exception)
+            {
+                return StatusCode(500, "An unexpected error occurred");
+            }
         }
+
     }
 }
