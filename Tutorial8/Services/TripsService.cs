@@ -6,7 +6,7 @@ namespace Tutorial8.Services;
 public class TripsService : ITripsService
 {
     private readonly string _connectionString = 
-        "Data Source=localhost,1433; User=SA; Password=yourStrong(!)Password; Initial Catalog=TravelAgency; Integrated Security=False; Connect Timeout=30; Encrypt=False; Trust Server Certificate=False";
+        "Data Source=localhost,1433; User=SA; Password=yourStrong(!)Password; Initial Catalog=apbd; Integrated Security=False; Connect Timeout=30; Encrypt=False; Trust Server Certificate=False";
 
     public async Task<List<TripDTO>> GetTrips()
     {

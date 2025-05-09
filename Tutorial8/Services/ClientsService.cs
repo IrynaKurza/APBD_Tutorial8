@@ -6,7 +6,7 @@ namespace Tutorial8.Services;
 public class ClientsService : IClientsService
 {
     private readonly string _connectionString = 
-        "Data Source=localhost,1433; User=SA; Password=yourStrong(!)Password; Initial Catalog=TravelAgency; Integrated Security=False; Connect Timeout=30; Encrypt=False; Trust Server Certificate=False";
+        "Data Source=localhost,1433; User=SA; Password=yourStrong(!)Password; Initial Catalog=apbd; Integrated Security=False; Connect Timeout=30; Encrypt=False; Trust Server Certificate=False";
 
     public async Task<int> CreateClient(ClientCreateDTO client)
     {
@@ -125,7 +125,6 @@ public class ClientsService : IClientsService
         {
             await conn.OpenAsync();
             
-            // Check client exists
             string clientCommand = "SELECT 1 FROM Client WHERE IdClient = @cid";
             using (SqlCommand clientCmd = new SqlCommand(clientCommand, conn))
             {
