@@ -1,10 +1,26 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Tutorial8.Models.DTOs;
 
 public class ClientCreateDTO
 {
-    public  string FirstName { get; set; }
+    [Required] 
+    [StringLength(100)]
+    public string FirstName { get; set; }
+
+    [Required] 
+    [StringLength(100)]
     public string LastName { get; set; }
+
+    [Required] 
+    [EmailAddress] 
     public string Email { get; set; }
-    public string Telephone { get; set; } 
+
+    [Required] 
+    [Phone] 
+    public string Telephone { get; set; }
+
+    [Required] 
+    [StringLength(11, MinimumLength = 11)]
     public string Pesel { get; set; }
 }

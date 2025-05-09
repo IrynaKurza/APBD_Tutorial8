@@ -42,7 +42,7 @@ Content-Type: application/json
   "email": "john.doe@example.com"
 }
 
-### 4.1 PUT /api/clients/5/trips/3 - Success (200 OK)
+### 4.1 PUT /api/clients/90/trips/8 - Success (200 OK)
 PUT {{Tutorial8_HostAddress}}/api/clients/5/trips/3
 Content-Type: application/json
 
@@ -69,12 +69,4 @@ Content-Type: application/json
 ### 5.3 DELETE /api/clients/999/trips/1 - Client Not Found (404 Not Found)
 DELETE {{Tutorial8_HostAddress}}/api/clients/999/trips/1
 Content-Type: application/json
-
-### 6.1 PATCH /api/clients/1 - Not Implemented (501 Not Implemented or 404)
-PATCH {{Tutorial8_HostAddress}}/api/clients/1
-Content-Type: application/json
-
-{
-  "email": "updated.email@example.com"
-}
 

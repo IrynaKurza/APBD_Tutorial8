@@ -5,12 +5,17 @@ namespace Tutorial8.Services;
 
 public class TripsService : ITripsService
 {
-    private readonly string _connectionString = 
-        "Data Source=localhost,1433; User=SA; Password=yourStrong(!)Password; Initial Catalog=apbd; Integrated Security=False; Connect Timeout=30; Encrypt=False; Trust Server Certificate=False";
+    private readonly string? _connectionString;
 
+    public TripsService(IConfiguration configuration)
+    {
+        _connectionString = configuration.GetConnectionString("TravelAgencyDb");
+    }
     public async Task<List<TripDTO>> GetTrips()
     {
         var trips = new List<TripDTO>();
+        
+        // get all trips with country info (used for GET /api/trips)
         string command = @"
             SELECT t.IdTrip, t.Name, t.Description, t.DateFrom, t.DateTo, t.MaxPeople, c.Name as CountryName 
             FROM Trip t
@@ -60,7 +65,9 @@ public class TripsService : ITripsService
 
     public async Task<bool> DoesTripExist(int tripId)
     {
+        // check if a trip exists (used for GET /api/trips/{id})
         string command = "SELECT 1 FROM Trip WHERE IdTrip = @id";
+        
         using (SqlConnection conn = new SqlConnection(_connectionString))
         using (SqlCommand cmd = new SqlCommand(command, conn))
         {
@@ -72,6 +79,7 @@ public class TripsService : ITripsService
 
     public async Task<TripDTO> GetTripDetails(int tripId)
     {
+        // get details of a specific trip with country list (used for GET /api/trips/{id})
         string command = @"
             SELECT t.IdTrip, t.Name, t.Description, t.DateFrom, t.DateTo, t.MaxPeople, c.Name as CountryName 
             FROM Trip t

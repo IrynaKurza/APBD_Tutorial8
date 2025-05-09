@@ -14,6 +14,9 @@ namespace Tutorial8.Controllers
             _tripsService = tripsService;
         }
 
+        /* GET /api/trips
+           returns a list of all available trips with country info
+           returns 200 OK */
         [HttpGet]
         public async Task<IActionResult> GetTrips()
         {
@@ -21,6 +24,10 @@ namespace Tutorial8.Controllers
             return Ok(trips);
         }
 
+        
+        /* GET /api/trips/{id}
+           returns detailed info about a specific trip
+           returns 200 OK or 404 if trip doesn’t exist */
         [HttpGet("{id}")]
         public async Task<IActionResult> GetTrip(int id)
         {

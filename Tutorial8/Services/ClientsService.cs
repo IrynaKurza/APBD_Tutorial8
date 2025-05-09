@@ -5,20 +5,15 @@ namespace Tutorial8.Services;
 
 public class ClientsService : IClientsService
 {
-    private readonly string _connectionString = 
-        "Data Source=localhost,1433; User=SA; Password=yourStrong(!)Password; Initial Catalog=apbd; Integrated Security=False; Connect Timeout=30; Encrypt=False; Trust Server Certificate=False";
+    private readonly string? _connectionString;
 
+    public ClientsService(IConfiguration configuration)
+    {
+        _connectionString = configuration.GetConnectionString("TravelAgencyDb");
+    }
     public async Task<int> CreateClient(ClientCreateDTO client)
     {
-        if (string.IsNullOrWhiteSpace(client.FirstName) || 
-            string.IsNullOrWhiteSpace(client.LastName) ||
-            string.IsNullOrWhiteSpace(client.Email) ||
-            string.IsNullOrWhiteSpace(client.Telephone) ||
-            string.IsNullOrWhiteSpace(client.Pesel))
-        {
-            throw new ArgumentException("FirstName, LastName, Email, Telephone and Pesel are required");
-        }
-
+        // insert client and return its ID (used for POST /api/clients)
         string command = @"
             INSERT INTO Client (FirstName, LastName, Email, Telephone, Pesel)
             OUTPUT INSERTED.IdClient
@@ -47,7 +42,9 @@ public class ClientsService : IClientsService
         {
             await conn.OpenAsync();
             
+            // check if client is registered for the trip (used for DELETE /api/clients/{id}/trips/{id})
             string checkCommand = "SELECT 1 FROM Client_Trip WHERE IdClient = @cid AND IdTrip = @tid";
+            
             using (SqlCommand checkCmd = new SqlCommand(checkCommand, conn))
             {
                 checkCmd.Parameters.AddWithValue("@cid", clientId);
@@ -57,7 +54,9 @@ public class ClientsService : IClientsService
                     throw new KeyNotFoundException("Registration not found");
             }
 
+            // delete the registration if it exists
             string deleteCommand = "DELETE FROM Client_Trip WHERE IdClient = @cid AND IdTrip = @tid";
+            
             using (SqlCommand deleteCmd = new SqlCommand(deleteCommand, conn))
             {
                 deleteCmd.Parameters.AddWithValue("@cid", clientId);
@@ -74,8 +73,9 @@ public class ClientsService : IClientsService
         
         using (SqlConnection conn = new SqlConnection(_connectionString))
         {
-            // Verify client exists
+            // check if client exists (used for GET /api/clients/{id}/trips)
             string checkCommand = "SELECT 1 FROM Client WHERE IdClient = @id";
+            
             using (SqlCommand checkCmd = new SqlCommand(checkCommand, conn))
             {
                 checkCmd.Parameters.AddWithValue("@id", clientId);
@@ -84,6 +84,7 @@ public class ClientsService : IClientsService
                     throw new KeyNotFoundException("Client not found");
             }
 
+            // get all trips that the client is registered for, including dates and payment info
             string command = @"
                 SELECT t.Name, ct.RegisteredAt, ct.PaymentDate 
                 FROM Client_Trip ct
@@ -125,7 +126,9 @@ public class ClientsService : IClientsService
         {
             await conn.OpenAsync();
             
+            // check if client exists (used for PUT /api/clients/{id}/trips/{id})
             string clientCommand = "SELECT 1 FROM Client WHERE IdClient = @cid";
+            
             using (SqlCommand clientCmd = new SqlCommand(clientCommand, conn))
             {
                 clientCmd.Parameters.AddWithValue("@cid", clientId);
@@ -133,7 +136,9 @@ public class ClientsService : IClientsService
                     throw new KeyNotFoundException("Client not found");
             }
             
+            // check if trip exists and get max number of people
             string tripCommand = "SELECT MaxPeople FROM Trip WHERE IdTrip = @tid";
+            
             using (SqlCommand tripCmd = new SqlCommand(tripCommand, conn))
             {
                 tripCmd.Parameters.AddWithValue("@tid", tripId);
@@ -143,7 +148,9 @@ public class ClientsService : IClientsService
                 
                 var maxPeople = Convert.ToInt32(maxPeopleObj);
 
+                // count current number of registered participants for this trip
                 string currentCommand = "SELECT COUNT(*) FROM Client_Trip WHERE IdTrip = @tid";
+                
                 using (SqlCommand currentCmd = new SqlCommand(currentCommand, conn))
                 {
                     currentCmd.Parameters.AddWithValue("@tid", tripId);
@@ -157,7 +164,9 @@ public class ClientsService : IClientsService
                 }
             }
             
+            // check if the client is already registered for this trip
             string existsCommand = "SELECT 1 FROM Client_Trip WHERE IdClient = @cid AND IdTrip = @tid";
+            
             using (SqlCommand existsCmd = new SqlCommand(existsCommand, conn))
             {
                 existsCmd.Parameters.AddWithValue("@cid", clientId);
@@ -168,6 +177,7 @@ public class ClientsService : IClientsService
             
             int todayAsInt = GetTodayAsInt();
             
+            // insert new registration with today's date
             string insertCommand = @"
                 INSERT INTO Client_Trip (IdClient, IdTrip, RegisteredAt)
                 VALUES (@cid, @tid, @date)";
@@ -181,6 +191,7 @@ public class ClientsService : IClientsService
             }
         }
     }
+    
     
     // helper methods
     private string ConvertIntToDateString(int dateInt)

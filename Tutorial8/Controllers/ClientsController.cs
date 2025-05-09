@@ -15,6 +15,10 @@ namespace Tutorial8.Controllers
             _clientsService = clientsService;
         }
 
+        
+        /* POST /api/clients
+           creates a new client based on request body
+           returns 201 Created with new client ID, or 400 if invalid */
         [HttpPost]
         public async Task<IActionResult> CreateClient([FromBody] ClientCreateDTO client)
         {
@@ -31,6 +35,9 @@ namespace Tutorial8.Controllers
             }
         }
 
+        /* DELETE /api/clients/{idClient}/trips/{idTrip}
+           removes a client’s registration from a specific trip
+           returns 204 No Content or 404 if registration not found */
         [HttpDelete("{idClient}/trips/{idTrip}")]
         public async Task<IActionResult> DeleteTripRegistration(int idClient, int idTrip)
         {
@@ -45,6 +52,10 @@ namespace Tutorial8.Controllers
             }
         }
 
+        
+        /* GET /api/clients/{idClient}/trips
+           returns all trips a client is registered for
+           returns 200 OK with trip list, or 404 if client not found */
         [HttpGet("{idClient}/trips")]
         public async Task<IActionResult> GetClientTrips(int idClient)
         {
@@ -59,6 +70,9 @@ namespace Tutorial8.Controllers
             }
         }
 
+        /* PUT /api/clients/{idClient}/trips/{idTrip}
+           registers the client for a trip if not full
+           returns 200 OK or 404 Not Found */
         [HttpPut("{idClient}/trips/{idTrip}")]
         public async Task<IActionResult> AssignToTrip(int idClient, int idTrip)
         {
